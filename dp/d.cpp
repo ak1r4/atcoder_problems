@@ -5,33 +5,26 @@ int main() {
     int N, W;
     cin >> N >> W;
 
-    // dp[n][w] stores the maximum value of all subset of n items, with total weight up to w
-    vector<vector<int64_t>> dp(N + 1);
-    for (auto& v : dp) { v.resize(W + 1); }
-
-    // when we have 0 item, value for all weight levels should be 0
-    for (int i = 0; i < W; ++i) { dp[0][i] = 0; }
-    // when we have up to i item, total weight 0 can only mean we have empty set, which means 0 value
-    for (int i = 0; i < N; ++i) { dp[i][0] = 0; }
+    array<vector<int64_t>, 2> dps {vector<int64_t>(W+1, 0), vector<int64_t>(W+1, 0)};
+    bool new_dp_idx = 1;
 
     for (int i = 0; i < N; ++i) {
         int w;
         int64_t v;
         cin >> w >> v;
-        for (int j = 1; j <= W; ++j) {
-            // we calculate dp[up to i+1 item][up to j weight]
-            // it would be the bigger one between
-            // - not adding the new item
-            // - adding the new item
-            dp[i + 1][j] = max(
-                dp[i][j],  // not adding the new item, the weight does not change
-                j >= w ? dp[i][j - w] + v : -1  // adding new item, when the new items weight do not exceeds limit, otherwise -1
+
+        for (int j = 0; j <=W; ++j) {
+            dps[new_dp_idx][j] = max(
+                dps[!new_dp_idx][j],  // do not take the new item
+                w > j ? -1 : dps[!new_dp_idx][j-w] + v  // if current weight is bigger than the weight we are calc, return -1 value,
+                                                        // which means we don't take this new item (max() will pick the previous one)
+                                                        // otherwise, we add the current value to a previous vlaue with weight of j -w
             );
         }
+        new_dp_idx = !new_dp_idx;
     }
 
-    // print dp[N][W], up to N item with up to W total weight
-    cout << dp[N][W] << "\n";
+    cout << dps[!new_dp_idx][W] << "\n";
 
     return 0;
 }
